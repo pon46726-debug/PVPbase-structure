@@ -1,0 +1,22 @@
+package com.layd.pvpclient.module;
+
+import net.minecraft.client.MinecraftClient;
+
+/**
+ * Базовый интерфейс модуля.
+ */
+public interface Module {
+    String getId();
+    String getName();
+
+    void onEnable();
+    void onDisable();
+
+    /**
+     * Tick вызывается каждый клиентский тик (в основном клиентский поток).
+     */
+    void tick(MinecraftClient client);
+
+    boolean isEnabled();
+    void setEnabled(boolean enabled);
+}
