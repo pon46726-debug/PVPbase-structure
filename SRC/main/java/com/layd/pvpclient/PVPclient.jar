@@ -1,0 +1,61 @@
+package com.layd.pvpclient;
+
+import com.layd.pvpclient.module.ModuleManager;
+import com.layd.pvpclient.module.example.AutoClickerModule;
+import com.layd.pvpclient.friends.FriendManager;
+import com.layd.pvpclient.targets.TargetManager;
+import com.layd.pvpclient.events.EventManager;
+import net.fabricmc.api.ClientModInitializer;
+import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.client.option.KeyBinding;
+import net.minecraft.client.util.InputUtil;
+
+import java.nio.file.Path;
+
+/**
+ * Главный класс мода — инициализирует сервисы и регистрирует события/модули.
+ */
+public class PvPClient implements ClientModInitializer {
+
+    public static ModuleManager MODULES;
+    public static FriendManager FRIENDS;
+    public static TargetManager TARGETS;
+    public static EventManager EVENTS;
+
+    // example keybind to open friends GUI or toggle modules
+    public static KeyBinding openFriendsKey;
+
+    @Override
+    public void onInitializeClient() {
+        MODULES = new ModuleManager();
+        EVENTS = new EventManager();
+
+        // config path (Fabric loader)
+        Path cfg = FabricLoader.getInstance().getConfigDir().resolve("pvpclient");
+        FRIENDS = new FriendManager(cfg.resolve("friends.json"));
+        TARGETS = new TargetManager(FRIENDS);
+
+        // keybinding: default 'K' (keycode 75)
+        openFriendsKey = new KeyBinding("key.pvpclient.friends", InputUtil.Type.KEYSYM, 75, "category.pvpclient");
+        KeyBindingHelper.registerKeyBinding(openFriendsKey);
+
+        // register example module
+        MODULES.register(new AutoClickerModule());
+
+        // client tick: update modules and react to keypresses
+        ClientTickEvents.END_CLIENT_TICK.register(client -> {
+            // handle key to open friends GUI
+            if (openFriendsKey.wasPressed()) {
+                if (client.player != null) {
+                    client.execute(() -> client.openScreen(new com.layd.pvpclient.friends.FriendListScreen()));
+                }
+            }
+            MODULES.tickAll(client);
+        });
+
+        // Additional event registrations can go in EventManager
+        EVENTS.registerFabricListeners();
+    }
+}
