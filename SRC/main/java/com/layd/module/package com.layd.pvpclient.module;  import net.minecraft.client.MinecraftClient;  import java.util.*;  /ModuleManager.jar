@@ -1,0 +1,36 @@
+package com.layd.pvpclient.module;
+
+import net.minecraft.client.MinecraftClient;
+
+import java.util.*;
+
+/**
+ * Простая регистрация/менеджер модулей.
+ */
+public class ModuleManager {
+    private final Map<String, Module> modules = new LinkedHashMap<>();
+
+    public void register(Module m) {
+        modules.put(m.getId(), m);
+    }
+
+    public Optional<Module> get(String id) {
+        return Optional.ofNullable(modules.get(id));
+    }
+
+    public Collection<Module> getAll() {
+        return Collections.unmodifiableCollection(modules.values());
+    }
+
+    public void tickAll(MinecraftClient client) {
+        for (Module m : modules.values()) {
+            if (m.isEnabled()) {
+                try {
+                    m.tick(client);
+                } catch (Throwable t) {
+                    t.printStackTrace();
+                }
+            }
+        }
+    }
+}
